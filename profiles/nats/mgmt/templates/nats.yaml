@@ -1,0 +1,28 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.clusterName }}-nats
+  namespace: argocd
+  finalizers:
+  # This solves issue #17
+  - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: {{ .Values.clusterName }}
+    namespace: default
+  project: default
+  source:
+    repoURL: https://github.com/rsoto91/arlon-demo/
+    path: bundles/nats
+    targetRevision: HEAD
+    helm:
+      parameters:
+      # Pass cluster name to the bundle in case it needs it and is a Helm chart.
+      # Example: this is required by the CAPI cluster autoscaler.
+      # Use arlon prefix to avoid any conflicts with the bundle's own values.
+      - name: arlon.clusterName
+        value: {{ .Values.clusterName }}
