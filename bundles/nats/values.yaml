@@ -210,7 +210,7 @@ nats:
   #        name: log-config
 
   jetstream:
-    enabled: true
+    enabled: false
 
     # Jetstream Domain
     domain:
