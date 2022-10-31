@@ -247,7 +247,7 @@ nats:
     #                          #
     ############################
     fileStorage:
-      enabled: true
+      enabled: false
       storageDirectory: /data
 
       # Set for use with existing PVC
