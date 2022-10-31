@@ -111,7 +111,7 @@ nats:
 
   # Toggle whether to enable external access.
   # This binds a host port for clients, gateways and leafnodes.
-  externalAccess: true
+  externalAccess: false
 
   # Toggle to disable client advertisements (connect_urls),
   # in case of running behind a load balancer
@@ -247,7 +247,7 @@ nats:
     #                          #
     ############################
     fileStorage:
-      enabled: false
+      enabled: true
       storageDirectory: /data
 
       # Set for use with existing PVC
