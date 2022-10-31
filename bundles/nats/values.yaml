@@ -484,7 +484,7 @@ bootconfig:
 # https://github.com/nats-io/nats-box
 #
 natsbox:
-  enabled: false
+  enabled: true
   image: natsio/nats-box:0.13.2
   pullPolicy: IfNotPresent
   securityContext: {}
