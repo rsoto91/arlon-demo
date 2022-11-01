@@ -679,12 +679,12 @@ websocket:
 
 # Network Policy configuration
 networkPolicy:
-  enabled: true
+  enabled: false
   # Don't require client label for connections
   # When set to false, only pods with the correct client label will have network access to the ports
   # NATS is listening on. When true, NATS will accept connections from any source
   # (with the correct destination port).
-  allowExternal: false
+  allowExternal: true
   # Add extra ingress rules to the NetworkPolicy
   # e.g:
   # extraIngress:
