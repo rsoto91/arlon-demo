@@ -145,7 +145,8 @@ nats:
   resources: {}
 
   client:
-    port: 4222
+    #port: 4222
+    port: 4223
     portName: "client"
 
   # Server settings.
