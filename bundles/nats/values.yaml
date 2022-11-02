@@ -146,8 +146,8 @@ nats:
 
   #Default 4222  
   client:
-    port: 4222
-    #port: 4223
+    #port: 4222
+    port: 4223
     portName: "client"
 
   # Server settings.
