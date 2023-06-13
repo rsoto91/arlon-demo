@@ -1,5 +1,0 @@
-resources:
-- eks-procore-base.yaml
-
-configurations:
-- configurations.yaml
