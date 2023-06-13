@@ -1,0 +1,5 @@
+resources:
+- eks-rene-base.yaml
+
+configurations:
+- configurations.yaml
