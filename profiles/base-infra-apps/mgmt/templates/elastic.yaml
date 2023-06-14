@@ -10,7 +10,7 @@ metadata:
 spec:
   syncPolicy:
     automated:
-      prune: true
+      prune: false
   destination:
     name: {{ .Values.clusterName }}
     namespace: default
