@@ -1,0 +1,5 @@
+resources:
+- demo-base.yaml
+
+configurations:
+- configurations.yaml

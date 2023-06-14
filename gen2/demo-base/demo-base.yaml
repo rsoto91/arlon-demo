@@ -2,15 +2,14 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   name: demo
-  namespace: default
 spec:
   clusterNetwork:
     pods:
       cidrBlocks:
-        - 10.20.0.0/16
+      - 10.20.0.0/16
     services:
       cidrBlocks:
-        - 10.21.0.0/16
+      - 10.21.0.0/16
   controlPlaneRef:
     apiVersion: controlplane.cluster.x-k8s.io/v1beta1
     kind: AWSManagedControlPlane
@@ -20,62 +19,60 @@ spec:
     kind: AWSManagedControlPlane
     name: demo-control-plane
 ---
-kind: AWSManagedControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: AWSManagedControlPlane
 metadata:
   name: demo-control-plane
-  namespace: default
 spec:
   addons:
-    - name: vpc-cni
-      version: v1.12.6-eksbuild.2
-      conflictResolution: overwrite
-    - name: coredns
-      version: v1.9.3-eksbuild.3
-      conflictResolution: overwrite
-    - name: kube-proxy
-      version: v1.24.10-eksbuild.2
-      conflictResolution: overwrite
-  region: us-west-1
-  sshKeyName: jb4key
-  version: v1.24
-  eksClusterName: demo
+  - conflictResolution: overwrite
+    name: vpc-cni
+    version: v1.12.6-eksbuild.2
+  - conflictResolution: overwrite
+    name: coredns
+    version: v1.9.3-eksbuild.3
+  - conflictResolution: overwrite
+    name: kube-proxy
+    version: v1.24.10-eksbuild.2
   disableVPCCNI: false
+  eksClusterName: demo
+  endpointAccess:
+    private: true
+    public: true
+    publicCIDRs:
+    - 0.0.0.0/0
+  identityRef:
+    kind: AWSClusterStaticIdentity
+    name: 9dbf835bed844848acb0fa1ec17a0842-se-aws
   logging:
     apiServer: false
     audit: false
     authenticator: false
     controllerManager: false
     scheduler: false
-  endpointAccess:
-    private: true
-    public: true
-    publicCIDRs:
-      - 0.0.0.0/0
-  identityRef:
-    kind: AWSClusterStaticIdentity
-    name: 9dbf835bed844848acb0fa1ec17a0842-se-aws
   network:
     subnets:
-      - cidrBlock: 10.0.0.0/20
-        isPublic: true
-        availabilityZone: us-west-1b
-      - cidrBlock: 10.0.128.0/20
-        isPublic: false
-        availabilityZone: us-west-1b
-      - cidrBlock: 10.0.16.0/20
-        isPublic: true
-        availabilityZone: us-west-1c
-      - cidrBlock: 10.0.144.0/20
-        isPublic: false
-        availabilityZone: us-west-1c
+    - availabilityZone: us-west-1b
+      cidrBlock: 10.0.0.0/20
+      isPublic: true
+    - availabilityZone: us-west-1b
+      cidrBlock: 10.0.128.0/20
+      isPublic: false
+    - availabilityZone: us-west-1c
+      cidrBlock: 10.0.16.0/20
+      isPublic: true
+    - availabilityZone: us-west-1c
+      cidrBlock: 10.0.144.0/20
+      isPublic: false
+  region: us-west-1
+  sshKeyName: jb4key
+  version: v1.24
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
-  name: demo-md-0
-  namespace: default
   annotations: {}
+  name: demo-md-0
 spec:
   clusterName: demo
   replicas: 3
@@ -84,8 +81,8 @@ spec:
       machineDeployment: demo-md-0
   strategy:
     rollingUpdate:
-      maxUnavailable: 0
       maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -107,7 +104,6 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: AWSMachineTemplate
 metadata:
   name: demo-md-0
-  namespace: default
 spec:
   template:
     spec:
@@ -120,7 +116,6 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: EKSConfigTemplate
 metadata:
   name: demo-md-0
-  namespace: default
 spec:
   template:
     spec:
@@ -130,18 +125,17 @@ apiVersion: sunpike.platform9.com/v1alpha2
 kind: ClusterAddon
 metadata:
   labels:
+    clusterName: demo
     sunpike.pf9.io/cluster: demo
     type: metrics-server
-    clusterName: demo
   name: demo-metrics-server
-  namespace: default
 spec:
   override:
     params:
-      - name: metricsCpuLimit
-        value: 100m
-      - name: metricsMemoryLimit
-        value: 300Mi
+    - name: metricsCpuLimit
+      value: 100m
+    - name: metricsMemoryLimit
+      value: 300Mi
   type: metrics-server
   version: 0.5.2
   watch: true
@@ -150,11 +144,10 @@ apiVersion: sunpike.platform9.com/v1alpha2
 kind: ClusterAddon
 metadata:
   labels:
+    clusterName: demo
     sunpike.pf9.io/cluster: demo
     type: kubernetes-dashboard
-    clusterName: demo
   name: demo-kubernetes-dashboard
-  namespace: default
 spec:
   override: {}
   type: kubernetes-dashboard
@@ -165,16 +158,15 @@ apiVersion: sunpike.platform9.com/v1alpha2
 kind: ClusterAddon
 metadata:
   labels:
+    clusterName: demo
     sunpike.pf9.io/cluster: demo
     type: monitoring
-    clusterName: demo
   name: demo-monitoring
-  namespace: default
 spec:
   override:
     params:
-      - name: retentionTime
-        value: 7d
+    - name: retentionTime
+      value: 7d
   type: monitoring
   version: 0.57.2
   watch: true
