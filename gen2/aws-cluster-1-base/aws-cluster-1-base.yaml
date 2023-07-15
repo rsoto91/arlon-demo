@@ -1,0 +1,246 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: aws-cluster-1
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 10.20.0.0/16
+    services:
+      cidrBlocks:
+        - 10.21.0.0/16
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: NodeletControlPlane
+    name: aws-cluster-1-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: AWSCluster
+    name: aws-cluster-1
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSCluster
+metadata:
+  name: aws-cluster-1
+  namespace: default
+spec:
+  region: us-west-1
+  sshKeyName: jb4key
+  identityRef:
+    kind: AWSClusterStaticIdentity
+    name: 9dbf835bed844848acb0fa1ec17a0842-se-aws
+  controlPlaneLoadBalancer:
+    scheme: internet-facing
+    crossZoneLoadBalancing: false
+    healthCheckProtocol: TCP
+  network:
+    vpc:
+      cidrBlock: 10.0.0.0/16
+    subnets:
+      - cidrBlock: 10.0.0.0/20
+        isPublic: true
+        availabilityZone: us-west-1b
+      - cidrBlock: 10.0.128.0/20
+        isPublic: false
+        availabilityZone: us-west-1b
+    cni:
+      cniIngressRules:
+        - description: bgp (calico)
+          protocol: tcp
+          fromPort: 179
+          toPort: 179
+        - description: IP-in-IP (calico)
+          protocol: '4'
+          fromPort: -1
+          toPort: 65535
+        - description: calico typha (pf9)
+          protocol: tcp
+          fromPort: 5473
+          toPort: 5473
+        - description: node exporter (pf9)
+          protocol: tcp
+          fromPort: 9100
+          toPort: 9100
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: NodeletControlPlane
+metadata:
+  name: aws-cluster-1-control-plane
+  namespace: default
+spec:
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: AWSMachineTemplate
+      name: aws-cluster-1-control-plane
+    nodeletConfigSpec:
+      httpProxy: {}
+  replicas: 3
+  version: 1.24.7-pmk.203
+  cni:
+    calico:
+      IPIPMode: Always
+      IPv4BlkSize: 26
+      IPv4DetectionMethod: first-found
+      MTUSize: 1440
+      natOutgoing: true
+  dns: {}
+  schedulable: false
+  apiserver:
+    apiGroupsAndVersions: ''
+    privileged: true
+    extraArgs: {}
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSMachineTemplate
+metadata:
+  name: aws-cluster-1-control-plane
+  namespace: default
+spec:
+  template:
+    spec:
+      publicIP: false
+      rootVolume:
+        size: 50
+        type: gp3
+      nonRootVolumes:
+        - size: 100
+          type: gp3
+          deviceName: /dev/xvdb
+      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t2.medium
+      sshKeyName: jb4key
+      ami:
+        id: ami-04b7133a525334ceb
+      cloudInit:
+        insecureSkipSecretsManager: true
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: aws-cluster-1-md-0
+  namespace: default
+  annotations: {}
+spec:
+  clusterName: aws-cluster-1
+  replicas: 3
+  selector:
+    matchLabels:
+      machineDeployment: aws-cluster-1-md-0
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        machineDeployment: aws-cluster-1-md-0
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: NodeletConfigTemplate
+          name: aws-cluster-1-md-0
+      clusterName: aws-cluster-1
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: AWSMachineTemplate
+        name: aws-cluster-1-md-0
+      version: 1.24.7-pmk.203
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSMachineTemplate
+metadata:
+  name: aws-cluster-1-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      rootVolume:
+        size: 50
+        type: gp3
+      nonRootVolumes:
+        - size: 100
+          type: gp3
+          deviceName: /dev/xvdb
+      ami:
+        id: ami-04b7133a525334ceb
+      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t2.medium
+      sshKeyName: jb4key
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: NodeletConfigTemplate
+metadata:
+  name: aws-cluster-1-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      labels: {}
+      taints: []
+---
+apiVersion: sunpike.platform9.com/v1alpha2
+kind: ClusterAddon
+metadata:
+  labels:
+    sunpike.pf9.io/cluster: aws-cluster-1
+    type: kubernetes-dashboard
+    clusterName: aws-cluster-1
+  name: aws-cluster-1-kubernetes-dashboard
+  namespace: default
+spec:
+  override: {}
+  type: kubernetes-dashboard
+  version: 2.4.0
+  watch: true
+---
+apiVersion: sunpike.platform9.com/v1alpha2
+kind: ClusterAddon
+metadata:
+  labels:
+    sunpike.pf9.io/cluster: aws-cluster-1
+    type: monitoring
+    clusterName: aws-cluster-1
+  name: aws-cluster-1-monitoring
+  namespace: default
+spec:
+  override:
+    params:
+      - name: retentionTime
+        value: 7d
+  type: monitoring
+  version: 0.57.2
+  watch: true
+---
+apiVersion: sunpike.platform9.com/v1alpha2
+kind: ClusterAddon
+metadata:
+  labels:
+    sunpike.pf9.io/cluster: aws-cluster-1
+    type: coredns
+    clusterName: aws-cluster-1
+  name: aws-cluster-1-coredns
+  namespace: default
+spec:
+  override:
+    params:
+      - name: dnsMemoryLimit
+        value: 170Mi
+      - name: dnsDomain
+        value: cluster.local
+      - name: CoresPerReplica
+        value: '256'
+      - name: NodesPerReplica
+        value: '16'
+      - name: MinReplicas
+        value: '1'
+      - name: MaxReplicas
+        value: '10'
+      - name: PollPeriodSecs
+        value: '300'
+  type: coredns
+  version: 1.8.6
+  watch: true
