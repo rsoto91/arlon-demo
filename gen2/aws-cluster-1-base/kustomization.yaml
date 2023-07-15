@@ -1,0 +1,5 @@
+resources:
+- aws-cluster-1-base.yaml
+
+configurations:
+- configurations.yaml
