@@ -1,0 +1,5 @@
+resources:
+- cluster02.yaml
+
+configurations:
+- configurations.yaml
