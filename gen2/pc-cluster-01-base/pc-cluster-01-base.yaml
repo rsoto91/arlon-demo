@@ -1,120 +1,121 @@
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
-  name: pc-test-01
-  namespace: default
+  name: pc-test-02
 spec:
   clusterNetwork:
     pods:
       cidrBlocks:
-        - 10.20.0.0/16
+      - 10.20.0.0/16
     services:
       cidrBlocks:
-        - 10.21.0.0/16
+      - 10.21.0.0/16
   controlPlaneRef:
     apiVersion: controlplane.cluster.x-k8s.io/v1beta1
     kind: AWSManagedControlPlane
-    name: pc-test-01-control-plane
+    name: pc-test-02-control-plane
   infrastructureRef:
     apiVersion: controlplane.cluster.x-k8s.io/v1beta1
     kind: AWSManagedControlPlane
-    name: pc-test-01-control-plane
+    name: pc-test-02-control-plane
 ---
-kind: AWSManagedControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: AWSManagedControlPlane
 metadata:
-  name: pc-test-01-control-plane
-  namespace: default
+  name: pc-test-02-control-plane
 spec:
   addons:
-    - name: vpc-cni
-      version: v1.13.4-eksbuild.1
-      conflictResolution: overwrite
-    - name: coredns
-      version: v1.9.3-eksbuild.5
-      conflictResolution: overwrite
-    - name: kube-proxy
-      version: v1.24.15-eksbuild.2
-      conflictResolution: overwrite
-  region: us-west-1
-  sshKeyName: jb4key
-  version: v1.24
-  eksClusterName: pc-test-01
+  - conflictResolution: overwrite
+    name: vpc-cni
+    version: v1.12.6-eksbuild.2
+  - conflictResolution: overwrite
+    name: coredns
+    version: v1.9.3-eksbuild.3
+  - conflictResolution: overwrite
+    name: kube-proxy
+    version: v1.24.10-eksbuild.2
   disableVPCCNI: false
-  logging:
-    apiServer: false
-    audit: false
-    authenticator: false
-    controllerManager: false
-    scheduler: false
+  eksClusterName: pc-test-02
   endpointAccess:
     private: true
     public: true
     publicCIDRs:
-      - 0.0.0.0/0
+    - 0.0.0.0/0
   identityRef:
     kind: AWSClusterStaticIdentity
     name: 395790ba38ec451bb28aed6839e83dd3-se-rene-aws
+  logging:
+    apiServer: true
+    audit: false
+    authenticator: false
+    controllerManager: false
+    scheduler: false
   network:
     subnets:
-      - cidrBlock: 10.0.0.0/20
-        isPublic: true
-        availabilityZone: us-west-1b
-      - cidrBlock: 10.0.128.0/20
-        isPublic: false
-        availabilityZone: us-west-1b
+    - availabilityZone: us-west-1b
+      cidrBlock: 10.0.0.0/20
+      isPublic: true
+    - availabilityZone: us-west-1b
+      cidrBlock: 10.0.128.0/20
+      isPublic: false
+    - availabilityZone: us-west-1c
+      cidrBlock: 10.0.16.0/20
+      isPublic: true
+    - availabilityZone: us-west-1c
+      cidrBlock: 10.0.144.0/20
+      isPublic: false
+  region: us-west-1
+  sshKeyName: jb4key
+  version: v1.24
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
-  name: pc-test-01-md-0
-  namespace: default
   annotations: {}
+  name: pc-test-02-md-0
 spec:
-  clusterName: pc-test-01
+  clusterName: pc-test-02
   replicas: 3
   selector:
     matchLabels:
-      machineDeployment: pc-test-01-md-0
+      machineDeployment: pc-test-02-md-0
   strategy:
     rollingUpdate:
-      maxUnavailable: 0
       maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        machineDeployment: pc-test-01-md-0
+        machineDeployment: pc-test-02-md-0
     spec:
       bootstrap:
         configRef:
           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
           kind: EKSConfigTemplate
-          name: pc-test-01-md-0
-      clusterName: pc-test-01
+          name: pc-test-02-md-0
+      clusterName: pc-test-02
       infrastructureRef:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: AWSMachineTemplate
-        name: pc-test-01-md-0
+        name: pc-test-02-md-0
       version: v1.24
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: AWSMachineTemplate
 metadata:
-  name: pc-test-01-md-0
-  namespace: default
+  name: pc-test-02-md-0
 spec:
   template:
     spec:
       ami: {}
       iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
-      instanceType: t2.medium
+      instanceType: t2.large
       sshKeyName: jb4key
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: EKSConfigTemplate
 metadata:
-  name: pc-test-01-md-0
-  namespace: default
+  name: pc-test-02-md-0
 spec:
   template:
     spec:
@@ -124,16 +125,15 @@ apiVersion: sunpike.platform9.com/v1alpha2
 kind: ClusterAddon
 metadata:
   labels:
-    sunpike.pf9.io/cluster: pc-test-01
+    clusterName: pc-test-02
+    sunpike.pf9.io/cluster: pc-test-02
     type: monitoring
-    clusterName: pc-test-01
-  name: pc-test-01-monitoring
-  namespace: default
+  name: pc-test-02-monitoring
 spec:
   override:
     params:
-      - name: retentionTime
-        value: 7d
+    - name: retentionTime
+      value: 7d
   type: monitoring
   version: 0.57.2
   watch: true
