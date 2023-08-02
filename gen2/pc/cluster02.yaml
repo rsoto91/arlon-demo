@@ -137,3 +137,23 @@ spec:
   type: monitoring
   version: 0.57.2
   watch: true
+---
+apiVersion: sunpike.platform9.com/v1alpha2
+kind: ClusterAddon
+metadata:
+  labels:
+    sunpike.pf9.io/cluster: pc-test-02
+    type: metrics-server
+    clusterName: pc-test-02
+  name: pc-test-02-metrics-server
+  namespace: default
+spec:
+  override:
+    params:
+      - name: metricsCpuLimit
+        value: 100m
+      - name: metricsMemoryLimit
+        value: 300Mi
+  type: metrics-server
+  version: 0.5.2
+  watch: true
